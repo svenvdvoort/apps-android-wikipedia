@@ -14,8 +14,9 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.TextUtils;
+import android.util.JsonReader;
+import android.util.JsonToken;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.ActionProvider;
@@ -90,7 +91,6 @@ import org.wikipedia.history.UpdateHistoryTask;
 import org.wikipedia.json.GsonUtil;
 import org.wikipedia.language.LangLinksActivity;
 import org.wikipedia.login.LoginActivity;
-import org.wikipedia.main.MainActivity;
 import org.wikipedia.media.AvPlayer;
 import org.wikipedia.page.action.PageActionTab;
 import org.wikipedia.page.leadimages.LeadImagesHandler;
@@ -113,6 +113,7 @@ import org.wikipedia.util.DimenUtil;
 import org.wikipedia.util.FeedbackUtil;
 import org.wikipedia.util.GeoUtil;
 import org.wikipedia.util.ShareUtil;
+import org.wikipedia.util.StringUtil;
 import org.wikipedia.util.ThrowableUtil;
 import org.wikipedia.util.UriUtil;
 import org.wikipedia.util.log.L;
@@ -125,6 +126,7 @@ import org.wikipedia.watchlist.WatchlistExpiryDialog;
 import org.wikipedia.wiktionary.WiktionaryDialog;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -137,7 +139,6 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-import static com.amazonaws.mobile.auth.core.internal.util.ThreadUtils.runOnUiThread;
 import static org.wikipedia.Constants.ACTIVITY_REQUEST_GALLERY;
 import static org.wikipedia.Constants.InvokeSource.BOOKMARK_BUTTON;
 import static org.wikipedia.Constants.InvokeSource.PAGE_ACTION_TAB;
@@ -219,7 +220,7 @@ public class PageFragment extends Fragment implements BackPressedHandler, Commun
     @Nullable private List<Section> sections;
 
     private WikipediaApp app;
-    public static final String TAG= "Polly";
+    public static final String TAG = "Polly";
 
 
     @NonNull
@@ -257,9 +258,7 @@ public class PageFragment extends Fragment implements BackPressedHandler, Commun
 
         @Override
         public void onFindInPageTabSelected() {
-           new RetrieveFeedTask().execute(mediaPlayer,client);
-
-            //showFindInPage();
+            showFindInPage();
         }
 
         @Override
@@ -288,6 +287,27 @@ public class PageFragment extends Fragment implements BackPressedHandler, Commun
                 scrolledUpForThemeChange = false;
                 showBottomSheet(ThemeChooserDialog.newInstance(PAGE_ACTION_TAB));
             }
+        }
+
+        @Override
+        @SuppressWarnings("checkstyle:magicnumber")
+        public void onReadSelected() {
+            getWebView().evaluateJavascript(
+                    "(function() { return ('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>'); })();",
+                    html -> {
+                        JsonReader reader = new JsonReader(new StringReader(html));
+                        reader.setLenient(true);
+                        try {
+                            if (reader.peek() == JsonToken.STRING) {
+                                String domStr = reader.nextString();
+                                if (domStr != null) {
+                                    new RetrieveFeedTask().execute(mediaPlayer, client, StringUtil.removeHTMLTags(domStr).replace("pcs.c1.Page.onBodyStart();", "").substring(0, 500));
+                                }
+                            }
+                        } catch (IOException e) {
+                            // handle exception
+                        }
+                    });
         }
 
         @Override
@@ -398,18 +418,18 @@ public class PageFragment extends Fragment implements BackPressedHandler, Commun
      class RetrieveFeedTask extends AsyncTask<Object, Void, Void> {
          @Override
          protected Void doInBackground(Object... mediaPlayer) {
-             SynthesizeSpeechPresignRequest synthesizeSpeechPresignRequest=
+             SynthesizeSpeechPresignRequest synthesizeSpeechPresignRequest =
                      new SynthesizeSpeechPresignRequest() // Set text to synthesize.
-                             .withText("This is test text") // Set voice selected by the user.
-                             .withVoiceId(VoiceId.Aditi) // Set format to MP3.
+                             .withText((String) mediaPlayer[2]) // Set voice selected by the user.
+                             .withVoiceId(VoiceId.Matthew) // Set format to MP3.
                              .withOutputFormat(OutputFormat.Mp3);
 
              // Get the presigned URL for synthesized speech audio stream.
 
              // Get the presigned URL for synthesized speech audio stream.
              URL presignedSynthesizeSpeechUrl =
-                     ((AmazonPollyPresigningClient)mediaPlayer[1]  ).getPresignedSynthesizeSpeechUrl(
-                     synthesizeSpeechPresignRequest);
+                     ((AmazonPollyPresigningClient) mediaPlayer[1]).getPresignedSynthesizeSpeechUrl(
+                             synthesizeSpeechPresignRequest);
 
              Log.i(TAG, "Playing speech from presigned URL: $presignedSynthesizeSpeechUrl");
 
