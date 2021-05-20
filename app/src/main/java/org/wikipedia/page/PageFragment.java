@@ -10,8 +10,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.ActionProvider;
 import android.view.LayoutInflater;
@@ -19,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -96,11 +100,13 @@ import org.wikipedia.settings.Prefs;
 import org.wikipedia.suggestededits.PageSummaryForEdit;
 import org.wikipedia.talk.TalkTopicsActivity;
 import org.wikipedia.theme.ThemeChooserDialog;
+import org.wikipedia.tts.TTSManager;
 import org.wikipedia.util.ActiveTimer;
 import org.wikipedia.util.DimenUtil;
 import org.wikipedia.util.FeedbackUtil;
 import org.wikipedia.util.GeoUtil;
 import org.wikipedia.util.ShareUtil;
+import org.wikipedia.util.StringUtil;
 import org.wikipedia.util.ThrowableUtil;
 import org.wikipedia.util.UriUtil;
 import org.wikipedia.util.log.L;
@@ -116,6 +122,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
@@ -204,7 +211,7 @@ public class PageFragment extends Fragment implements BackPressedHandler, Commun
     @Nullable private List<Section> sections;
 
     private WikipediaApp app;
-
+     TextToSpeech mTextToSpeech;
     @NonNull
     private final SwipeRefreshLayout.OnRefreshListener pageRefreshListener = this::refreshPage;
 
@@ -272,8 +279,20 @@ public class PageFragment extends Fragment implements BackPressedHandler, Commun
         }
 
         @Override
+        public void onReadSelected() {
+            /*getWebView().evaluateJavascript(
+                    "(function() { return ('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>'); })();",
+                    html -> {
+                        Log.e("####", "html");
+                        // code here
+                        //TTSManager.speak(StringUtil.removeStyleTags(html),getTitle().getWikiSite().languageCode());
+                    });*/
+            bridge.evaluate(JavaScriptActionHandler.getTextSelection(), s -> TTSManager.speak(StringUtil.removeStyleTags(s),getTitle().getWikiSite().languageCode()));
+        }
+
+        @Override
         public void onViewToCTabSelected() {
-            tocHandler.show();
+            TTSManager.setUp(app.getApplicationContext());
         }
 
         @Override

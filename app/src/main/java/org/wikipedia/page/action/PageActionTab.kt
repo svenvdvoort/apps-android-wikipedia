@@ -25,6 +25,11 @@ enum class PageActionTab : EnumCode {
             cb.onFontAndThemeTabSelected()
         }
     },
+    READ {
+        override fun select(cb: Callback) {
+            cb.onReadSelected()
+        }
+    },
     VIEW_TOC {
         override fun select(cb: Callback) {
             cb.onViewToCTabSelected()
@@ -43,6 +48,7 @@ enum class PageActionTab : EnumCode {
         fun onChooseLangTabSelected()
         fun onFindInPageTabSelected()
         fun onFontAndThemeTabSelected()
+        fun onReadSelected()
         fun onViewToCTabSelected()
         fun updateBookmark(pageSaved: Boolean)
     }

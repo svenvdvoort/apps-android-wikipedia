@@ -50,6 +50,7 @@
         android:icon="@mipmap/launcher"
         android:label="@string/app_name"
         android:name=".WikipediaApp"
+        tools:replace="android:name"
         android:theme="@style/AppTheme">
 
         <!-- Multi-window support on Samsung devices -->

@@ -375,6 +375,7 @@
     <string name="article_menu_bar_language_button">Language</string>
     <string name="article_menu_bar_search_button">Search</string>
     <string name="article_menu_bar_theme_button">Theme</string>
+    <string name="article_menu_bar_read_button">Read</string>
     <string name="article_menu_bar_contents_button">Contents</string>
     <string name="article_header_edit_hint">Edit…</string>
     <string name="article_header_edit_description">Edit article description</string>
