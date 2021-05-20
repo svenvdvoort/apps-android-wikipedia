@@ -209,6 +209,9 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.12.1'
     implementation 'com.github.chrisbanes:PhotoView:2.3.0'
     implementation "com.github.skydoves:balloon:1.3.4"
+    def aws_version = "2.16.+"
+    implementation "com.amazonaws:aws-android-sdk-polly:$aws_version"
+    implementation "com.amazonaws:aws-android-sdk-mobile-client:$aws_version"
 
     // For language detection during editing
     prodImplementation "com.google.mlkit:language-id:$mlKitVersion"

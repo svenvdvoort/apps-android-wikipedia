@@ -9,9 +9,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.ActionProvider;
 import android.view.LayoutInflater;
@@ -38,6 +43,12 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.client.UserStateDetails;
+import com.amazonaws.services.polly.AmazonPollyPresigningClient;
+import com.amazonaws.services.polly.model.OutputFormat;
+import com.amazonaws.services.polly.model.SynthesizeSpeechPresignRequest;
+import com.amazonaws.services.polly.model.VoiceId;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textview.MaterialTextView;
@@ -79,6 +90,7 @@ import org.wikipedia.history.UpdateHistoryTask;
 import org.wikipedia.json.GsonUtil;
 import org.wikipedia.language.LangLinksActivity;
 import org.wikipedia.login.LoginActivity;
+import org.wikipedia.main.MainActivity;
 import org.wikipedia.media.AvPlayer;
 import org.wikipedia.page.action.PageActionTab;
 import org.wikipedia.page.leadimages.LeadImagesHandler;
@@ -112,6 +124,8 @@ import org.wikipedia.watchlist.WatchlistExpiry;
 import org.wikipedia.watchlist.WatchlistExpiryDialog;
 import org.wikipedia.wiktionary.WiktionaryDialog;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -123,6 +137,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
+import static com.amazonaws.mobile.auth.core.internal.util.ThreadUtils.runOnUiThread;
 import static org.wikipedia.Constants.ACTIVITY_REQUEST_GALLERY;
 import static org.wikipedia.Constants.InvokeSource.BOOKMARK_BUTTON;
 import static org.wikipedia.Constants.InvokeSource.PAGE_ACTION_TAB;
@@ -204,6 +219,8 @@ public class PageFragment extends Fragment implements BackPressedHandler, Commun
     @Nullable private List<Section> sections;
 
     private WikipediaApp app;
+    public static final String TAG= "Polly";
+
 
     @NonNull
     private final SwipeRefreshLayout.OnRefreshListener pageRefreshListener = this::refreshPage;
@@ -240,7 +257,9 @@ public class PageFragment extends Fragment implements BackPressedHandler, Commun
 
         @Override
         public void onFindInPageTabSelected() {
-            showFindInPage();
+           new RetrieveFeedTask().execute(mediaPlayer,client);
+
+            //showFindInPage();
         }
 
         @Override
@@ -329,8 +348,89 @@ public class PageFragment extends Fragment implements BackPressedHandler, Commun
         super.onCreate(savedInstanceState);
         app = (WikipediaApp) requireActivity().getApplicationContext();
         model = new PageViewModel();
+        initPollyClient();
+        setupNewMediaPlayer();
     }
 
+    MediaPlayer mediaPlayer = null;
+
+    private void  setupNewMediaPlayer() {
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                mp.release();
+                setupNewMediaPlayer();
+            }
+        });
+        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                mp.start();
+            }
+        });
+        mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            @Override
+            public boolean onError(MediaPlayer mp, int what, int extra) {
+                return false;
+            }
+        });
+    }
+    private AmazonPollyPresigningClient client = null;
+
+    private void initPollyClient() {
+            AWSMobileClient.getInstance().initialize(requireContext(), new com.amazonaws.mobile.client.Callback<UserStateDetails>() {
+                @Override
+                public void onResult(UserStateDetails result) {
+                    // Create a client that supports generation of presigned URLs.
+                    client = new AmazonPollyPresigningClient(AWSMobileClient.getInstance());
+                    Log.d(TAG, "onResult: Created polly pre-signing client");
+
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    Log.e(TAG, "onError: Initialization error", e);
+                }
+            });
+        }
+
+     class RetrieveFeedTask extends AsyncTask<Object, Void, Void> {
+         @Override
+         protected Void doInBackground(Object... mediaPlayer) {
+             SynthesizeSpeechPresignRequest synthesizeSpeechPresignRequest=
+                     new SynthesizeSpeechPresignRequest() // Set text to synthesize.
+                             .withText("This is test text") // Set voice selected by the user.
+                             .withVoiceId(VoiceId.Aditi) // Set format to MP3.
+                             .withOutputFormat(OutputFormat.Mp3);
+
+             // Get the presigned URL for synthesized speech audio stream.
+
+             // Get the presigned URL for synthesized speech audio stream.
+             URL presignedSynthesizeSpeechUrl =
+                     ((AmazonPollyPresigningClient)mediaPlayer[1]  ).getPresignedSynthesizeSpeechUrl(
+                     synthesizeSpeechPresignRequest);
+
+             Log.i(TAG, "Playing speech from presigned URL: $presignedSynthesizeSpeechUrl");
+
+             // Create a media player to play the synthesized audio stream.
+
+             ((MediaPlayer)mediaPlayer[0]).setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+             try {
+                 // Set media player's data source to previously obtained URL.
+                 ((MediaPlayer)mediaPlayer[0]).setDataSource(presignedSynthesizeSpeechUrl.toString());
+             } catch (IOException e) {
+                 Log.e(TAG, "Unable to set data source for the media player! " + e.getMessage());
+             }
+
+             // Start the playback asynchronously (since the data source is a network stream).
+
+             // Start the playback asynchronously (since the data source is a network stream).
+             ((MediaPlayer)mediaPlayer[0]).prepareAsync();
+             return null;
+         }
+     }
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              final Bundle savedInstanceState) {
