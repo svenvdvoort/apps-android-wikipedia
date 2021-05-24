@@ -41,7 +41,7 @@
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/article_menu_show_toc"
         style="@style/PageActionTabLayoutButtonStyle"
-        android:tag="4"
+        android:tag="5"
         android:text="@string/article_menu_bar_contents_button"
         app:drawableTopCompat="@drawable/ic_icon_list" />
 </merge>

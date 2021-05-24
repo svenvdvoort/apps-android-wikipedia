@@ -10,11 +10,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.ActionProvider;
 import android.view.LayoutInflater;
@@ -22,7 +20,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -122,7 +119,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
@@ -247,7 +243,10 @@ public class PageFragment extends Fragment implements BackPressedHandler, Commun
 
         @Override
         public void onFindInPageTabSelected() {
-            showFindInPage();
+            //bridge.execute(JavaScriptActionHandler.prepareToScrollTo("Australian and Greek forces", false));
+            String s1, s2, s3;
+            webView.findAllAsync("German paratroopers jumping over Crete");
+            // showFindInPage();
         }
 
         @Override

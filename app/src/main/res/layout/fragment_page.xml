@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<org.wikipedia.views.SwipeRefreshLayoutWithScroll
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<org.wikipedia.views.SwipeRefreshLayoutWithScroll xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/page_refresh_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -43,15 +43,54 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:layout_marginBottom="?attr/actionBarSize" />
+            android:layout_marginBottom="120dp" />
+
+        <LinearLayout
+            android:id="@+id/media_layout"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:elevation="8dp"
+            android:background="@color/red30"
+            android:layout_marginBottom="?attr/actionBarSize"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/rewind"
+                android:layout_width="30dp"
+                android:layout_height="match_parent"
+                android:tint="@color/green30"
+                tools:src="@drawable/ic_baseline_fast_rewind_24" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/pause"
+                android:layout_width="30dp"
+                android:layout_height="match_parent"
+                android:tint="@color/green30"
+                tools:src="@drawable/ic_baseline_play_arrow_24" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/forward"
+                android:layout_width="30dp"
+                android:layout_height="match_parent"
+                android:tint="@color/green30"
+                tools:src="@drawable/ic_baseline_fast_forward_24" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/stop"
+                android:layout_width="30dp"
+                android:layout_height="match_parent"
+                android:tint="@color/green30"
+                tools:src="@drawable/ic_baseline_stop_circle_24" />
+        </LinearLayout>
 
         <org.wikipedia.page.PageActionTabLayout
             android:id="@+id/page_actions_tab_layout"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/paper_color"
             android:layout_gravity="bottom"
-            android:elevation="8dp"/>
+            android:background="?attr/paper_color"
+            android:elevation="8dp" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
